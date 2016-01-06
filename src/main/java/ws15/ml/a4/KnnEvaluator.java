@@ -1,10 +1,6 @@
 package ws15.ml.a4;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import weka.classifiers.Evaluation;
 import weka.classifiers.lazy.IBk;
-import weka.core.Debug;
 import weka.core.Instances;
 import weka.core.neighboursearch.NearestNeighbourSearch;
 import weka.filters.Filter;
@@ -14,8 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class KnnEvaluator {
-
-    private static final Logger log = LoggerFactory.getLogger(KnnEvaluator.class);
 
     private final Configuration configuration;
 
@@ -39,45 +33,47 @@ public class KnnEvaluator {
     }
 
     public void evaluate() {
-        Map<Class, Evaluation> evaluationsMap = evaluateConfiguredSearchAlgorithms();
+        Map<Class, KnnEvaluation> evaluationsMap = evaluateConfiguredSearchAlgorithms();
 
         printEvaluationStatistics(evaluationsMap);
     }
 
-    private Map<Class, Evaluation> evaluateConfiguredSearchAlgorithms() {
-        Map<Class, Evaluation> evaluationsMap = new HashMap<>();
+    private Map<Class, KnnEvaluation> evaluateConfiguredSearchAlgorithms() {
+        Map<Class, KnnEvaluation> evaluationsMap = new HashMap<>();
 
         configuration.getSearchAlgorithms()
                 .forEach(it -> evaluationsMap.put(it.getClass(), performKnnEvaluationWith(it)));
+
         return evaluationsMap;
     }
 
-    private Evaluation performKnnEvaluationWith(NearestNeighbourSearch searchAlgorithm) {
-        try {
+    private KnnEvaluation performKnnEvaluationWith(NearestNeighbourSearch searchAlgorithm) {
             IBk knn = buildKnnClassifierWith(searchAlgorithm);
 
-            return crossValidateKnnClassifier(knn);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private IBk buildKnnClassifierWith(NearestNeighbourSearch searchAlgorithm) throws Exception {
-        IBk knn = new IBk();
-        knn.setNearestNeighbourSearchAlgorithm(searchAlgorithm);
-        knn.buildClassifier(instances);
-        return knn;
-    }
-
-    private Evaluation crossValidateKnnClassifier(IBk knn) throws Exception {
-        Evaluation evaluation = new Evaluation(instances);
-        evaluation.crossValidateModel(knn, instances, 10, new Debug.Random(1));
+        KnnEvaluation evaluation = new KnnEvaluation(instances, knn);
+        evaluation.run();
 
         return evaluation;
     }
 
-    private void printEvaluationStatistics(Map<Class, Evaluation> evaluationsMap) {
+    private IBk buildKnnClassifierWith(NearestNeighbourSearch searchAlgorithm) {
+        IBk knn = new IBk();
+        knn.setNearestNeighbourSearchAlgorithm(searchAlgorithm);
+
+        try {
+            knn.buildClassifier(instances);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return knn;
+    }
+
+    private void printEvaluationStatistics(Map<Class, KnnEvaluation> evaluationsMap) {
         evaluationsMap.entrySet()
-                .forEach(it -> log.info(it.getValue().toSummaryString(it.getKey().getSimpleName(), true)));
+                .forEach(it -> {
+                    System.out.print(it.getValue().getEvaluation().toSummaryString(it.getKey().getSimpleName(), true));
+                    System.out.println("Execution time: " + it.getValue().getEvaluationDurationMs() + " ms\n");
+                });
     }
 }
