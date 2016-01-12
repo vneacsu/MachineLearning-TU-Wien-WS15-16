@@ -1,105 +1,136 @@
 package ws15.ml.a4;
 
-import org.apache.commons.cli.*;
-import weka.core.Instances;
-import weka.core.converters.ConverterUtils.DataSource;
-import weka.core.neighboursearch.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.util.Arrays.asList;
+import java.io.Closeable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 public class Configuration {
 
-    private Instances instances;
-    private List<? extends NearestNeighbourSearch> searchAlgorithms;
+    private static final String DEFAULT_CONFIG_PROPERTIES = "default-config.properties";
 
-    private Configuration() {
+    private static final Options COMMAND_LINE_OPTIONS = new Options();
+
+    static {
+        COMMAND_LINE_OPTIONS.addOption("f", "file", true, "Data set file");
+
+        COMMAND_LINE_OPTIONS.addOption("c", "conf", true,
+                "Configuration file for knn parameters  (otherwise using defaults)");
     }
 
-    public Instances getInstances() {
-        return instances;
+    private final String dataSetFilePath;
+    private final int k;
+    private final Map<String, String> strategyOptions;
+
+    private Configuration(String dataSetFilePath, int k, Map<String, String> strategyOptions) {
+        this.dataSetFilePath = dataSetFilePath;
+        this.k = k;
+        this.strategyOptions = strategyOptions;
     }
 
-    public List<? extends NearestNeighbourSearch> getSearchAlgorithms() {
-        return searchAlgorithms;
+    public String getDataSetFilePath() {
+        return dataSetFilePath;
+    }
+
+    public int getK() {
+        return k;
+    }
+
+    public Map<String, String> getStrategyOptions() {
+        return strategyOptions;
     }
 
     public static Configuration fromArgs(String[] args) {
-        Configuration configuration = new Configuration();
+        CommandLine commandLine = parseCommandLineArgs(args);
 
+        return createConfigurationFrom(commandLine);
+    }
+
+    private static CommandLine parseCommandLineArgs(String[] args) {
         try {
-            CommandLine commandLine = new DefaultParser().parse(getOptions(), args);
-
-            configuration.instances = createInstancesFrom(commandLine);
-            configuration.searchAlgorithms = createSearchAlgorithmsFrom(commandLine);
+            return new DefaultParser().parse(COMMAND_LINE_OPTIONS, args);
         } catch (ParseException e) {
-            new HelpFormatter().printHelp("knn-evaluator", getOptions(), true);
-            System.exit(1);
+            throw new RuntimeException("Usage: knn-extractor -f <data set file path> [ -c <knn config file path>]", e);
         }
-
-        return configuration;
     }
 
-    private static Options getOptions() {
-        Options options = new Options();
-        options.addOption("f", "file", true, "Data set file");
-        options.addOption("a", "algorithms", true, "Nearest neighbor search algorithms to use (split by ',')");
+    private static Configuration createConfigurationFrom(CommandLine commandLine) {
+        String dataSetFilePath = getDataSetFilePath(commandLine);
 
-        return options;
+        Properties properties = getConfigProperties(commandLine);
+
+        int k = getKParamater(properties);
+
+        Map<String, String> strategyOptions = getStrategyOptions(properties);
+
+        return new Configuration(dataSetFilePath, k, strategyOptions);
     }
 
-    private static Instances createInstancesFrom(CommandLine commandLine) throws ParseException {
+    private static String getDataSetFilePath(CommandLine commandLine) {
         if (!commandLine.hasOption("f")) {
-            throw new ParseException("Data set file was not given");
+            throw new RuntimeException("Missing required data set file path!");
         }
 
+        return commandLine.getOptionValue("f");
+    }
+
+    private static Properties getConfigProperties(CommandLine commandLine) {
+        InputStream inputStream;
         try {
-            DataSource dataSource = new DataSource(commandLine.getOptionValue("f"));
-
-            Instances instances = dataSource.getDataSet();
-            instances.setClassIndex(instances.numAttributes() - 1);
-
-            return instances;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static List<? extends NearestNeighbourSearch> createSearchAlgorithmsFrom(CommandLine commandLine) {
-        if (!commandLine.hasOption("a")) {
-            return asList(new LinearNNSearch(), new BallTree(), new CoverTree(), new KDTree());
+            if (commandLine.hasOption("c")) {
+                inputStream = new FileInputStream(commandLine.getOptionValue("c"));
+            } else {
+                inputStream = Configuration.class.getClassLoader().getResourceAsStream(DEFAULT_CONFIG_PROPERTIES);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot read knn config file!", e);
         }
 
-        List<NearestNeighbourSearch> result = Arrays.asList(commandLine.getOptionValue("a").split(",")).stream()
-                .map(Configuration::mapToSearchAlgorithm)
-                .collect(Collectors.toList());
-        result.add(new LinearNNSearch());
-
-        return result;
-    }
-
-    private static NearestNeighbourSearch mapToSearchAlgorithm(String algorithmName) {
-        algorithmName = algorithmName.trim();
-
-        if (!isSupportedAlgorithm(algorithmName)) {
-            throw new IllegalArgumentException("Invalid search algorithm " + algorithmName);
-        }
-
+        Properties properties = new Properties();
         try {
-            return (NearestNeighbourSearch) Class.forName("weka.core.neighboursearch." + algorithmName).newInstance();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            properties.load(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load config properties", e);
+        } finally {
+            closeSilently(inputStream);
+        }
+
+        return properties;
+    }
+
+    private static void closeSilently(Closeable closeable) {
+        try {
+            closeable.close();
+        } catch (IOException ignore) {
         }
     }
 
-    private static boolean isSupportedAlgorithm(String algorithmName) {
-        return asList(BallTree.class, CoverTree.class, KDTree.class).stream()
-                .map(Class::getSimpleName)
-                .filter(it -> it.equals(algorithmName))
-                .findAny()
-                .isPresent();
+    private static int getKParamater(Properties properties) {
+        return Integer.parseInt(properties.getProperty("knn.k"));
+    }
+
+    private static Map<String, String> getStrategyOptions(Properties properties) {
+        Map<String, String> strategyOptions = new HashMap<>();
+        properties.keySet().stream()
+                .map(it -> (String) it)
+                .filter(it -> it.startsWith("strategy"))
+                .forEach(it -> strategyOptions.put(it, properties.getProperty(it)));
+
+        addBaselineStrategy(strategyOptions);
+
+        return strategyOptions;
+    }
+
+    private static void addBaselineStrategy(Map<String, String> strategyOptions) {
+        strategyOptions.put("'base-line' strategy (linear search)",
+                "weka.core.neighboursearch.LinearNNSearch -A \"weka.core.EuclideanDistance -R first-last\"");
     }
 }
