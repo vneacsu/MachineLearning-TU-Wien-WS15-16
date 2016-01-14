@@ -130,7 +130,7 @@ public class Configuration {
     }
 
     private static void addBaselineStrategy(Map<String, String> strategyOptions) {
-        strategyOptions.put("'base-line' strategy (linear search)",
+        strategyOptions.put("<base-line> strategy (linear search)",
                 "weka.core.neighboursearch.LinearNNSearch -A \"weka.core.EuclideanDistance -R first-last\"");
     }
 }

@@ -1,50 +1,40 @@
 package ws15.ml.a4;
 
-import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 public class KnnEvaluator {
 
     private static final double SPLIT_PERCENTAGE = 0.66;
 
-    private final ExecutorService executor = Executors.newCachedThreadPool();
-
     private final Configuration configuration;
+    private final ExecutorService executor;
+    private final KnnEvaluationsSaver evaluationsSaver;
 
     private Instances trainInstances;
     private Instances testInstances;
 
-    private final Map<String, Future<KnnEvaluationResults>> evaluationsMap = new HashMap<>();
-
-    public KnnEvaluator(Configuration configuration) {
+    public KnnEvaluator(Configuration configuration, ExecutorService executor, KnnEvaluationsSaver evaluationsSaver) {
         this.configuration = configuration;
+        this.executor = executor;
+        this.evaluationsSaver = evaluationsSaver;
     }
 
     public void evaluate() {
         loadInstances();
 
-        configuration.getStrategyOptions().forEach((strategyName, strategyOptions) -> {
-            IBk knn = newKnnWith(strategyOptions);
+        List<KnnEvaluation> evaluations = performEvaluations();
 
-            KnnEvaluation evaluation = new KnnEvaluation(knn, trainInstances, testInstances);
-
-            evaluationsMap.put(strategyName, executor.submit(evaluation));
-        });
-
-        //TODO: extend to perform result comparisons, plots, etc.
-        printEvaluationsStatistics();
-
-        executor.shutdownNow();
+        evaluationsSaver.persistKnnEvaluations(evaluations);
     }
 
     private void loadInstances() {
@@ -70,38 +60,34 @@ public class KnnEvaluator {
     }
 
     private void splitTrainAndTestInstances(Instances instances) {
-        int trainSize = (int) Math.round(instances.numInstances() * 0.66);
+        instances.randomize(new Random(1));
+
+        int trainSize = (int) Math.round(instances.numInstances() * SPLIT_PERCENTAGE);
         int testSize = instances.numInstances() - trainSize;
 
         this.trainInstances = new Instances(instances, 0, trainSize);
         this.testInstances = new Instances(instances, trainSize, testSize);
     }
 
-    private IBk newKnnWith(String strategyOptions) {
-        IBk knn = new IBk(configuration.getK());
-
-        try {
-            knn.setOptions(new String[]{"-A", strategyOptions});
-        } catch (Exception e) {
-            throw new RuntimeException("Cannot set knn options", e);
-        }
-
-        return knn;
+    private List<KnnEvaluation> performEvaluations() {
+        return configuration.getStrategyOptions().keySet().stream()
+                .map(this::evaluateStrategy)
+                .map(this::waitEvaluationResult)
+                .collect(Collectors.toList());
     }
 
-    private void printEvaluationsStatistics() {
-        evaluationsMap.forEach((evaluationTag, evaluationResults) -> {
-//            System.out.println("/=============================/");
-            System.out.println(evaluationTag + " results:\n\n");
+    private Future<KnnEvaluation> evaluateStrategy(String strategyId) {
+        KnnEvaluationRunner evaluationRunner = new KnnEvaluationRunner(configuration,
+                strategyId, trainInstances, testInstances);
 
-            KnnEvaluationResults results;
-            try {
-                results = evaluationResults.get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
-            }
+        return executor.submit(evaluationRunner);
+    }
 
-            System.out.println("\n\n\n/===================================/\n\n\n");
-        });
+    private KnnEvaluation waitEvaluationResult(Future<KnnEvaluation> knnEvaluationFuture) {
+        try {
+            return knnEvaluationFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
