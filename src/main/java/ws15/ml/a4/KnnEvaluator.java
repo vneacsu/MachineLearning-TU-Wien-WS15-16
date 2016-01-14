@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+
 public class KnnEvaluator {
 
     private static final double SPLIT_PERCENTAGE = 0.66;
