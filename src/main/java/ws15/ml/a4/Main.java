@@ -11,9 +11,12 @@ public class Main {
         try {
             Configuration configuration = Configuration.fromArgs(args);
 
-            KnnEvaluationsSaver saver = new KnnEvaluationsSaver(configuration);
+            KnnEvaluationsSaver knnEvaluationsSaver = new KnnEvaluationsSaver();
 
-            new KnnEvaluator(configuration, executor, saver).evaluate();
+            KnnEvaluator knnEvaluator = new KnnEvaluator(configuration, executor);
+            knnEvaluator.registerknnEvaluationsConsummer(knnEvaluationsSaver);
+
+            knnEvaluator.evaluate();
         } finally {
             executor.shutdownNow();
         }

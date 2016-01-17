@@ -2,10 +2,12 @@ package ws15.ml.a4;
 
 import weka.core.Instances;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,12 +16,16 @@ public class KnnEvaluator {
 
     private final Configuration configuration;
     private final ExecutorService executor;
-    private final KnnEvaluationsSaver evaluationsSaver;
 
-    public KnnEvaluator(Configuration configuration, ExecutorService executor, KnnEvaluationsSaver evaluationsSaver) {
+    private final List<Consumer<List<KnnEvaluation>>> knnEvaluationsConsumer = new ArrayList<>();
+
+    public KnnEvaluator(Configuration configuration, ExecutorService executor) {
         this.configuration = configuration;
         this.executor = executor;
-        this.evaluationsSaver = evaluationsSaver;
+    }
+
+    public void registerknnEvaluationsConsummer(Consumer<List<KnnEvaluation>> consumer) {
+        knnEvaluationsConsumer.add(consumer);
     }
 
     public void evaluate() {
@@ -27,7 +33,7 @@ public class KnnEvaluator {
 
         List<KnnEvaluation> evaluations = evaluateAllInstances(instances);
 
-        evaluationsSaver.persistKnnEvaluations(evaluations);
+        knnEvaluationsConsumer.forEach(it -> it.accept(evaluations));
     }
 
     private List<KnnEvaluation> evaluateAllInstances(List<Instances> instances) {

@@ -9,13 +9,13 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.Consumer;
 
-public class KnnEvaluationsSaver implements ResultProducer {
+public class KnnEvaluationsSaver implements ResultProducer, Consumer<List<KnnEvaluation>> {
 
-    private final Configuration configuration;
-
-    public KnnEvaluationsSaver(Configuration configuration) {
-        this.configuration = configuration;
+    @Override
+    public void accept(List<KnnEvaluation> evaluations) {
+        persistKnnEvaluations(evaluations);
     }
 
     public void persistKnnEvaluations(List<KnnEvaluation> evaluations) {
@@ -49,11 +49,11 @@ public class KnnEvaluationsSaver implements ResultProducer {
         return KnnEvaluation.getResultNames();
     }
 
+
     @Override
     public Object[] getResultTypes() throws Exception {
         return KnnEvaluation.getResultTypes();
     }
-
 
     //Following methods are here just to satisfy the interface and are ignored.
 
