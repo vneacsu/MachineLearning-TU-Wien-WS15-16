@@ -1,19 +1,22 @@
 package ws15.ml.a4;
 
 import weka.classifiers.Evaluation;
+import weka.core.Instances;
 
 public class KnnEvaluation {
     private final String optimizationStrategyId;
     private final String optimizationStrategyOptions;
+    private final Instances instances;
 
     private final long trainTimeMs;
     private final long testTimeMs;
     private final Evaluation evaluation;
 
-    public KnnEvaluation(String optimizationStrategyId, String optimizationStrategyOptions,
+    public KnnEvaluation(String optimizationStrategyId, String optimizationStrategyOptions, Instances instances,
                          long trainTimeMs, long testTimeMs, Evaluation evaluation) {
         this.optimizationStrategyId = optimizationStrategyId;
         this.optimizationStrategyOptions = optimizationStrategyOptions;
+        this.instances = instances;
         this.trainTimeMs = trainTimeMs;
         this.testTimeMs = testTimeMs;
         this.evaluation = evaluation;
@@ -21,6 +24,10 @@ public class KnnEvaluation {
 
     public Object[] getResult() {
         return new Object[]{
+                instances.relationName().split("-")[0],
+                new Double(instances.numInstances()),
+                new Double(instances.numAttributes()),
+                new Double(instances.numClasses()),
                 optimizationStrategyId,
                 optimizationStrategyOptions,
                 new Double(trainTimeMs),
@@ -33,6 +40,10 @@ public class KnnEvaluation {
 
     public static String[] getResultNames() {
         return new String[]{
+                "data_set_name",
+                "data_set_n_instances",
+                "data_set_n_attributes",
+                "data_set_n_classes",
                 "optimization_strategy_id",
                 "optimization_strategy_options",
                 "train_time_ms",
@@ -44,6 +55,6 @@ public class KnnEvaluation {
     }
 
     public static Object[] getResultTypes() {
-        return new Object[]{"", "", .0, .0, .0, .0, .0};
+        return new Object[]{"", .0, .0, .0, "", "", .0, .0, .0, .0, .0};
     }
 }

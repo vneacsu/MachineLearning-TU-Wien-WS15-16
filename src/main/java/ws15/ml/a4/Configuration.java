@@ -10,8 +10,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import static java.util.Arrays.asList;
 
 public class Configuration {
 
@@ -26,18 +29,18 @@ public class Configuration {
                 "Configuration file for knn parameters  (otherwise using defaults)");
     }
 
-    private final String dataSetFilePath;
+    private final List<String> dataSetPaths;
     private final int k;
     private final Map<String, String> strategyOptions;
 
-    private Configuration(String dataSetFilePath, int k, Map<String, String> strategyOptions) {
-        this.dataSetFilePath = dataSetFilePath;
+    private Configuration(List<String> dataSetPaths, int k, Map<String, String> strategyOptions) {
+        this.dataSetPaths = dataSetPaths;
         this.k = k;
         this.strategyOptions = strategyOptions;
     }
 
-    public String getDataSetFilePath() {
-        return dataSetFilePath;
+    public List<String> getDataSetPaths() {
+        return dataSetPaths;
     }
 
     public int getK() {
@@ -63,7 +66,7 @@ public class Configuration {
     }
 
     private static Configuration createConfigurationFrom(CommandLine commandLine) {
-        String dataSetFilePath = getDataSetFilePath(commandLine);
+        List<String> dataSetPaths = getDataSetPaths(commandLine);
 
         Properties properties = getConfigProperties(commandLine);
 
@@ -71,15 +74,15 @@ public class Configuration {
 
         Map<String, String> strategyOptions = getStrategyOptions(properties);
 
-        return new Configuration(dataSetFilePath, k, strategyOptions);
+        return new Configuration(dataSetPaths, k, strategyOptions);
     }
 
-    private static String getDataSetFilePath(CommandLine commandLine) {
+    private static List<String> getDataSetPaths(CommandLine commandLine) {
         if (!commandLine.hasOption("f")) {
             throw new RuntimeException("Missing required data set file path!");
         }
 
-        return commandLine.getOptionValue("f");
+        return asList(commandLine.getOptionValue("f").split(","));
     }
 
     private static Properties getConfigProperties(CommandLine commandLine) {

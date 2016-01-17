@@ -37,10 +37,9 @@ public class KnnEvaluationsSaver implements ResultProducer {
     }
 
     private File inferOutputFile() {
-        String inputDataSetFileName = new File(configuration.getDataSetFilePath()).getName().replace(".", "-");
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(":", "_");
 
-        String resultsFileName = String.format("%s-%s.arff", timestamp, inputDataSetFileName);
+        String resultsFileName = String.format("%s.arff", timestamp);
 
         return new File(resultsFileName);
     }

@@ -6,13 +6,16 @@ import java.util.concurrent.Executors;
 public class Main {
 
     public static void main(String[] args) {
-        Configuration configuration = Configuration.fromArgs(args);
-
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        KnnEvaluationsSaver saver = new KnnEvaluationsSaver(configuration);
 
-        new KnnEvaluator(configuration, executor, saver).evaluate();
+        try {
+            Configuration configuration = Configuration.fromArgs(args);
 
-        executor.shutdown();
+            KnnEvaluationsSaver saver = new KnnEvaluationsSaver(configuration);
+
+            new KnnEvaluator(configuration, executor, saver).evaluate();
+        } finally {
+            executor.shutdownNow();
+        }
     }
 }

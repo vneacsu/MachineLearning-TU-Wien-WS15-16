@@ -4,6 +4,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
 
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -15,17 +16,18 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
     private final String optimizationStrategyId;
 
     private final IBk knn;
-    private final Instances trainInstances;
-    private final Instances testInstances;
+    private final Instances instances;
+    private Instances trainInstances;
+    private Instances testInstances;
 
-    public KnnEvaluationRunner(Configuration configuration, String optimizationStrategyId,
-                               Instances trainInstances, Instances testInstances) {
+    public KnnEvaluationRunner(Configuration configuration, String optimizationStrategyId, Instances instances) {
         this.configuration = configuration;
         this.optimizationStrategyId = optimizationStrategyId;
 
         this.knn = newKnnInstance();
-        this.trainInstances = trainInstances;
-        this.testInstances = testInstances;
+        this.instances = new Instances(instances);
+
+        splitTrainAndTestInstances();
     }
 
     private IBk newKnnInstance() {
@@ -44,6 +46,17 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
         return configuration.getStrategyOptions().get(optimizationStrategyId);
     }
 
+    private void splitTrainAndTestInstances() {
+        //TODO: will use cross validation, therefore it is subject to remove in the future.
+        instances.randomize(new Random(1));
+
+        int trainSize = (int) Math.round(instances.numInstances() * 0.66);
+        int testSize = instances.numInstances() - trainSize;
+
+        this.trainInstances = new Instances(instances, 0, trainSize);
+        this.testInstances = new Instances(instances, trainSize, testSize);
+    }
+
     @Override
     public KnnEvaluation call() {
         long buildClassifierDurationMs = buildClassifierAndMeasureDurationMs();
@@ -60,7 +73,7 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
         }
         long modelEvaluationDurationMs = MILLISECONDS.convert(System.nanoTime() - start, NANOSECONDS);
 
-        return new KnnEvaluation(optimizationStrategyId, getOptimizationStrategyOptions(),
+        return new KnnEvaluation(optimizationStrategyId, getOptimizationStrategyOptions(), instances,
                 buildClassifierDurationMs, modelEvaluationDurationMs, evaluation);
     }
 
