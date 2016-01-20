@@ -8,17 +8,17 @@ public class KnnEvaluation {
     private final String optimizationStrategyOptions;
     private final Instances instances;
 
-    private final long trainTimeMs;
-    private final long testTimeMs;
+    private final long buildTimeMs;
+    private final long classificationTimeMs;
     private final Evaluation evaluation;
 
     public KnnEvaluation(String optimizationStrategyId, String optimizationStrategyOptions, Instances instances,
-                         long trainTimeMs, long testTimeMs, Evaluation evaluation) {
+                         long buildTimeMs, long classificationTimeMs, Evaluation evaluation) {
         this.optimizationStrategyId = optimizationStrategyId;
         this.optimizationStrategyOptions = optimizationStrategyOptions;
         this.instances = instances;
-        this.trainTimeMs = trainTimeMs;
-        this.testTimeMs = testTimeMs;
+        this.buildTimeMs = buildTimeMs;
+        this.classificationTimeMs = classificationTimeMs;
         this.evaluation = evaluation;
     }
 
@@ -30,8 +30,8 @@ public class KnnEvaluation {
                 new Double(instances.numClasses()),
                 optimizationStrategyId,
                 optimizationStrategyOptions,
-                new Double(trainTimeMs),
-                new Double(testTimeMs),
+                new Double(buildTimeMs),
+                new Double(classificationTimeMs),
                 evaluation.pctCorrect(),
                 evaluation.weightedFMeasure(),
                 evaluation.weightedFalsePositiveRate()
@@ -46,8 +46,8 @@ public class KnnEvaluation {
                 "data_set_n_classes",
                 "optimization_strategy_id",
                 "optimization_strategy_options",
-                "train_time_ms",
-                "test_time_ms",
+                "build_time_ms",
+                "classification_time_ms",
                 "accuracy",
                 "avg_f_measure",
                 "avg_false_positives_rate"

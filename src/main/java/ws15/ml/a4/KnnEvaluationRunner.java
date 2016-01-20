@@ -19,7 +19,6 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
 
     private final IBk knn;
     private final Instances instances;
-    private Instances instancesWithoutOneFold;
 
     // not used anymore
     //private Instances trainInstances;
@@ -68,6 +67,11 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
     @Override
     public KnnEvaluation call() {
 
+        // Find out build time for set of instances without one fold (e.g. 80% of instances for 5-fold cross-validation)
+        // TODO: Review calculation
+        Instances instancesWithoutOneFold = new Instances(instances, 0, Math.round(instances.numInstances() * (NUM_FOLDS - 1) / NUM_FOLDS ));
+        long buildWithoutOneFoldDurationMs = buildClassifierAndMeasureDurationMs(instancesWithoutOneFold);
+
         // Classifier is built from all instances of the data set
         long buildClassifierDurationMs = buildClassifierAndMeasureDurationMs(instances);
 
@@ -77,15 +81,19 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
         try {
             evaluation = new Evaluation(instances);
 
-            // Evaluation is done via cross-validation with all instances
+            // Evaluation is done by cross-validation with all instances
             evaluation.crossValidateModel(knn, instances, NUM_FOLDS, new Random(1));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         long modelEvaluationDurationMs = MILLISECONDS.convert(System.nanoTime() - start, NANOSECONDS);
 
+        // Calculate approximate classification time for set of all instances
+        // TODO: Review calculation
+        long classificationDurationMs = modelEvaluationDurationMs - (NUM_FOLDS * buildWithoutOneFoldDurationMs);
+
         return new KnnEvaluation(optimizationStrategyId, getOptimizationStrategyOptions(), instances,
-                buildClassifierDurationMs, modelEvaluationDurationMs, evaluation);
+                buildClassifierDurationMs, classificationDurationMs, evaluation);
     }
 
     private long buildClassifierAndMeasureDurationMs(Instances buildInstances) {
