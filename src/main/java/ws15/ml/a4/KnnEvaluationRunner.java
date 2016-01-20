@@ -12,13 +12,19 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
 
+    private static final int NUM_FOLDS = 5; // number of folds for cross-validation
+
     private final Configuration configuration;
     private final String optimizationStrategyId;
 
     private final IBk knn;
     private final Instances instances;
-    private Instances trainInstances;
-    private Instances testInstances;
+    private Instances instancesWithoutOneFold;
+
+    // not used anymore
+    //private Instances trainInstances;
+    //private Instances testInstances;
+
 
     public KnnEvaluationRunner(Configuration configuration, String optimizationStrategyId, Instances instances) {
         this.configuration = configuration;
@@ -27,7 +33,8 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
         this.knn = newKnnInstance();
         this.instances = new Instances(instances);
 
-        splitTrainAndTestInstances();
+        // replaced by cross-validation
+        //splitTrainAndTestInstances();
     }
 
     private IBk newKnnInstance() {
@@ -46,28 +53,32 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
         return configuration.getStrategyOptions().get(optimizationStrategyId);
     }
 
-    private void splitTrainAndTestInstances() {
-        //TODO: will use cross validation, therefore it is subject to remove in the future.
-        instances.randomize(new Random(1));
-
-        int trainSize = (int) Math.round(instances.numInstances() * 0.66);
-        int testSize = instances.numInstances() - trainSize;
-
-        this.trainInstances = new Instances(instances, 0, trainSize);
-        this.testInstances = new Instances(instances, trainSize, testSize);
-    }
+    // replaced by cross-validation
+//    private void splitTrainAndTestInstances() {
+//        //TODO: will use cross validation, therefore it is subject to remove in the future.
+//        instances.randomize(new Random(1));
+//
+//        int trainSize = (int) Math.round(instances.numInstances() * 0.66);
+//        int testSize = instances.numInstances() - trainSize;
+//
+//        this.trainInstances = new Instances(instances, 0, trainSize);
+//        this.testInstances = new Instances(instances, trainSize, testSize);
+//    }
 
     @Override
     public KnnEvaluation call() {
-        long buildClassifierDurationMs = buildClassifierAndMeasureDurationMs();
+
+        // Classifier is built from all instances of the data set
+        long buildClassifierDurationMs = buildClassifierAndMeasureDurationMs(instances);
 
         long start = System.nanoTime();
 
         Evaluation evaluation;
         try {
-            evaluation = new Evaluation(trainInstances);
+            evaluation = new Evaluation(instances);
 
-            evaluation.evaluateModel(knn, testInstances);
+            // Evaluation is done via cross-validation with all instances
+            evaluation.crossValidateModel(knn, instances, NUM_FOLDS, new Random(1));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -77,11 +88,11 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
                 buildClassifierDurationMs, modelEvaluationDurationMs, evaluation);
     }
 
-    private long buildClassifierAndMeasureDurationMs() {
+    private long buildClassifierAndMeasureDurationMs(Instances buildInstances) {
         long start = System.nanoTime();
 
         try {
-            knn.buildClassifier(trainInstances);
+            knn.buildClassifier(buildInstances);
         } catch (Exception e) {
             throw new RuntimeException("Failed to build knn classifier", e);
         }
