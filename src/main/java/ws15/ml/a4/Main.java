@@ -14,7 +14,7 @@ public class Main {
             KnnEvaluationsSaver knnEvaluationsSaver = new KnnEvaluationsSaver();
 
             KnnEvaluator knnEvaluator = new KnnEvaluator(configuration, executor);
-            knnEvaluator.registerknnEvaluationsConsummer(knnEvaluationsSaver);
+            knnEvaluator.registerknnEvaluationsConsumer(knnEvaluationsSaver);
 
             knnEvaluator.evaluate();
         } finally {

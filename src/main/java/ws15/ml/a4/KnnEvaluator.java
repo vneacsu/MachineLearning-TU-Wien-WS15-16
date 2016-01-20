@@ -24,7 +24,7 @@ public class KnnEvaluator {
         this.executor = executor;
     }
 
-    public void registerknnEvaluationsConsummer(Consumer<List<KnnEvaluation>> consumer) {
+    public void registerknnEvaluationsConsumer(Consumer<List<KnnEvaluation>> consumer) {
         knnEvaluationsConsumer.add(consumer);
     }
 
