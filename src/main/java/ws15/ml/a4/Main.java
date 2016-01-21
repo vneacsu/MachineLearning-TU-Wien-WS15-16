@@ -16,6 +16,8 @@ public class Main {
             KnnEvaluator knnEvaluator = new KnnEvaluator(configuration, executor);
             knnEvaluator.registerknnEvaluationsConsumer(knnEvaluationsSaver);
 
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnBreakEvenCharts());
+
             knnEvaluator.evaluate();
         } finally {
             executor.shutdownNow();
