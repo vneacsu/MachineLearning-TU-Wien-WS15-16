@@ -69,20 +69,20 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
 
         // Find out build time for set of instances without one fold (e.g. 80% of instances for 5-fold cross-validation)
         // TODO: Review calculation
-        Instances instancesWithoutOneFold = new Instances(instances, 0, Math.round(instances.numInstances() * (NUM_FOLDS - 1) / NUM_FOLDS ));
+        this.instances.randomize(new Random(1)); // to avoid unbalanced dataset before making subset
+        Instances instancesWithoutOneFold = new Instances(this.instances, 0, Math.round(instances.numInstances() * (NUM_FOLDS - 1) / NUM_FOLDS ));
         long buildWithoutOneFoldDurationMs = buildClassifierAndMeasureDurationMs(instancesWithoutOneFold);
 
         // Classifier is built from all instances of the data set
-        long buildClassifierDurationMs = buildClassifierAndMeasureDurationMs(instances);
+        long buildClassifierDurationMs = buildClassifierAndMeasureDurationMs(this.instances);
 
         long start = System.nanoTime();
-
         Evaluation evaluation;
         try {
-            evaluation = new Evaluation(instances);
+            evaluation = new Evaluation(this.instances);
 
             // Evaluation is done by cross-validation with all instances
-            evaluation.crossValidateModel(knn, instances, NUM_FOLDS, new Random(1));
+            evaluation.crossValidateModel(this.knn, this.instances, NUM_FOLDS, new Random(1));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -90,9 +90,9 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
 
         // Calculate approximate classification time for set of all instances
         // TODO: Review calculation
-        long classificationDurationMs = modelEvaluationDurationMs - (NUM_FOLDS * buildWithoutOneFoldDurationMs);
+        long classificationDurationMs = Math.max(modelEvaluationDurationMs - (NUM_FOLDS * buildWithoutOneFoldDurationMs), 0); // make sure duration is not negative
 
-        return new KnnEvaluation(optimizationStrategyId, getOptimizationStrategyOptions(), instances,
+        return new KnnEvaluation(this.optimizationStrategyId, getOptimizationStrategyOptions(), this.instances,
                 buildClassifierDurationMs, classificationDurationMs, evaluation);
     }
 
@@ -100,7 +100,7 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
         long start = System.nanoTime();
 
         try {
-            knn.buildClassifier(buildInstances);
+            this.knn.buildClassifier(buildInstances);
         } catch (Exception e) {
             throw new RuntimeException("Failed to build knn classifier", e);
         }
