@@ -41,7 +41,9 @@ public class Configuration {
     }
 
     private File createOutputDir() {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(":", "_");
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                .replace(":", "_")
+                .split("\\.")[0];
 
         File dir = new File(timestamp);
         if (!dir.mkdir()) {

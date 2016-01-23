@@ -3,6 +3,10 @@ package ws15.ml.a4;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import static ws15.ml.a4.InstancesLoader.getDatasetName;
 
 public class KnnEvaluation {
@@ -38,6 +42,23 @@ public class KnnEvaluation {
                 evaluation.weightedFMeasure(),
                 evaluation.weightedFalsePositiveRate()
         };
+    }
+
+    public String getOptimizationStrategyId() {
+        return optimizationStrategyId;
+    }
+
+    public double[][] getConfusionMatrix() {
+        return evaluation.confusionMatrix();
+    }
+
+    public Instances getInstances() {
+        return instances;
+    }
+
+    public static Map<String, List<KnnEvaluation>> groupByDataset(List<KnnEvaluation> knnEvaluations) {
+        return knnEvaluations.stream()
+                .collect(Collectors.groupingBy(it -> getDatasetName(it.instances)));
     }
 
     public static String[] getResultNames() {

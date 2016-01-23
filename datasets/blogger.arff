@@ -1,4 +1,4 @@
-@relation kohkiloyeh
+@relation blogger
 
 @attribute Degree {high,medium,low}
 @attribute caprice {left,middle,right}

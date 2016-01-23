@@ -15,6 +15,7 @@ public class Main {
 
             knnEvaluator.registerknnEvaluationsConsumer(new KnnEvaluationsSaver(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnBreakEvenCharts(configuration));
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnMisclassificationTrendsPlotter(configuration));
 
             knnEvaluator.evaluate();
         } finally {

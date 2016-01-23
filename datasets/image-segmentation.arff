@@ -1,4 +1,4 @@
-@relation segmentation-full
+@relation image_segmentation
 
 @attribute REGION-CENTROID-COL numeric
 @attribute REGION-CENTROID-ROW numeric
