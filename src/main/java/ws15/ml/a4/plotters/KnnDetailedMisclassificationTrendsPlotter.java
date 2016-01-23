@@ -1,6 +1,5 @@
 package ws15.ml.a4.plotters;
 
-import com.xeiam.xchart.BitmapEncoder;
 import com.xeiam.xchart.Chart;
 import com.xeiam.xchart.ChartBuilder;
 import com.xeiam.xchart.StyleManager;
@@ -9,11 +8,13 @@ import ws15.ml.a4.Configuration;
 import ws15.ml.a4.KnnEvaluation;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import static ws15.ml.a4.plotters.ChartUtils.CHART_HEIGHT;
+import static ws15.ml.a4.plotters.ChartUtils.CHART_WIDTH;
 
 public class KnnDetailedMisclassificationTrendsPlotter implements Consumer<List<KnnEvaluation>> {
 
@@ -33,8 +34,8 @@ public class KnnDetailedMisclassificationTrendsPlotter implements Consumer<List<
     private void plotMisclassificationsTrend(String datasetName, List<KnnEvaluation> evaluations) {
         Chart chart = new ChartBuilder()
                 .chartType(StyleManager.ChartType.Bar)
-                .width(1980)
-                .height(1020)
+                .width(CHART_WIDTH)
+                .height(CHART_HEIGHT)
                 .title("Detailed Misclassification Trend Chart")
                 .xAxisTitle("Classification")
                 .yAxisTitle("#instances")
@@ -47,11 +48,7 @@ public class KnnDetailedMisclassificationTrendsPlotter implements Consumer<List<
                 getYAxisData(it.getConfusionMatrix()))
         );
 
-        try {
-            BitmapEncoder.saveBitmap(chart, getOutputFileName(datasetName), BitmapEncoder.BitmapFormat.PNG);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ChartUtils.plotChart(chart, getOutputFileName(datasetName));
     }
 
     private List<String> getXAxisLabels(Instances dataset) {

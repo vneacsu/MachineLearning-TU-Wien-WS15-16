@@ -52,13 +52,30 @@ public class KnnEvaluation {
         return evaluation.confusionMatrix();
     }
 
+    public long getBuildTimeMs() {
+        return buildTimeMs;
+    }
+
+    public long getClassificationTimeMs() {
+        return classificationTimeMs;
+    }
+
     public Instances getInstances() {
         return instances;
+    }
+
+    public int getComplexity() {
+        return (int) (instances.numInstances() * Math.log(instances.numAttributes() + 1));
     }
 
     public static Map<String, List<KnnEvaluation>> groupByDataset(List<KnnEvaluation> knnEvaluations) {
         return knnEvaluations.stream()
                 .collect(Collectors.groupingBy(it -> getDatasetName(it.instances)));
+    }
+
+    public static Map<String, List<KnnEvaluation>> groupByStrategy(List<KnnEvaluation> knnEvaluations) {
+        return knnEvaluations.stream()
+                .collect(Collectors.groupingBy(it -> it.optimizationStrategyId));
     }
 
     public static String[] getResultNames() {
