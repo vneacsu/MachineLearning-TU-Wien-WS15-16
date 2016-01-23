@@ -1,21 +1,24 @@
 package ws15.ml.a4.plotters;
 
 import org.krysalis.jcharts.axisChart.AxisChart;
+import org.krysalis.jcharts.axisChart.ScatterPlotAxisChart;
 import org.krysalis.jcharts.chartData.AxisChartDataSet;
 import org.krysalis.jcharts.chartData.DataSeries;
+import org.krysalis.jcharts.chartData.ScatterPlotDataSeries;
+import org.krysalis.jcharts.chartData.ScatterPlotDataSet;
 import org.krysalis.jcharts.encoders.PNGEncoder;
-import org.krysalis.jcharts.properties.AxisProperties;
-import org.krysalis.jcharts.properties.ChartProperties;
-import org.krysalis.jcharts.properties.LegendProperties;
-import org.krysalis.jcharts.properties.LineChartProperties;
+import org.krysalis.jcharts.properties.*;
 import org.krysalis.jcharts.test.TestDataGenerator;
 import org.krysalis.jcharts.types.ChartType;
 import ws15.ml.a4.Configuration;
 import ws15.ml.a4.KnnEvaluation;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -73,6 +76,9 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
             Shape[] shapes = new Shape[numStrategies];
             String[] xAxisLabels = new String[numDatasets];
             double[][] data = new double[numStrategies][numDatasets];
+            double[] numInstances = new double[numDatasets];
+            double[] numAttributes = new double[numDatasets];
+            double[] numClasses = new double[numDatasets];
 
             // Fill arrays from evaluation results
             i = 0;
@@ -91,6 +97,9 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
 
                 if (strategyPos == 0) {
                     xAxisLabels[datasetPos] = (String) results[0];
+                    numInstances[datasetPos] = (Double) results[1];
+                    numAttributes[datasetPos] = (Double) results[2];
+                    numClasses[datasetPos] = (Double) results[3];
                 }
 
                 data[strategyPos][datasetPos] = (Double) results[6] + (Double) results[7];
@@ -125,8 +134,65 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
                     1200,
                     900);
 
+            // Prepare scatter plots for time by numInstances and complexity measure
+            ScatterPlotProperties scatterPlotProperties = new ScatterPlotProperties(strokes, shapes);
+            ScatterPlotDataSet scatterPlotDataSetInstances = new ScatterPlotDataSet(scatterPlotProperties);
+            ScatterPlotDataSet scatterPlotDataSetComplexity = new ScatterPlotDataSet(scatterPlotProperties);
+
+            for( int strategyPos = 0; strategyPos < numStrategies; strategyPos++ ) {
+                ArrayList<Point2D.Double> pointsInstances = new ArrayList<>(numDatasets);
+                ArrayList<Point2D.Double> pointsComplexity = new ArrayList<>(numDatasets);
+                for( int datasetPos = 0; datasetPos < numDatasets; datasetPos++ ) {
+                    pointsInstances.add(new Point2D.Double(numInstances[datasetPos], data[strategyPos][datasetPos]));
+                    // TODO: improve complexity calculation
+                    pointsComplexity.add(new Point2D.Double(
+                            numInstances[datasetPos] * Math.sqrt(numAttributes[datasetPos]),
+                            data[strategyPos][datasetPos]));
+                }
+
+                // Sort by x value
+                pointsInstances.sort(Comparator.comparingDouble(Point2D.Double::getX));
+                pointsComplexity.sort(Comparator.comparingDouble(Point2D.Double::getX));
+
+                scatterPlotDataSetInstances.addDataPoints(pointsInstances.toArray(new Point2D.Double[numDatasets]), paints[strategyPos], legendLabels[strategyPos] );
+                scatterPlotDataSetComplexity.addDataPoints(pointsComplexity.toArray(new Point2D.Double[numDatasets]), paints[strategyPos], legendLabels[strategyPos] );
+            }
+
+            ScatterPlotDataSeries scatterPlotDataSeriesInstances = new ScatterPlotDataSeries(
+                    scatterPlotDataSetInstances,
+                    "Number of instances",
+                    yAxisTitle,
+                    "Total time per strategy and number of instances");
+
+            ScatterPlotDataSeries scatterPlotDataSeriesComplexity = new ScatterPlotDataSeries(
+                    scatterPlotDataSetComplexity,
+                    "Complexity",
+                    yAxisTitle,
+                    "Total time per strategy and complexity");
+
+            ChartProperties chartProperties2 = new ChartProperties();
+            AxisProperties axisProperties2 = new AxisProperties(new DataAxisProperties(), new DataAxisProperties());
+            LegendProperties legendProperties2 = new LegendProperties();
+            ScatterPlotAxisChart scatterPlotAxisChartInstances = new ScatterPlotAxisChart(
+                    scatterPlotDataSeriesInstances,
+                    chartProperties2,
+                    axisProperties2,
+                    legendProperties2,
+                    1200,
+                    900 );
+
+            ScatterPlotAxisChart scatterPlotAxisChartComplexity = new ScatterPlotAxisChart(
+                    scatterPlotDataSeriesComplexity,
+                    chartProperties2,
+                    axisProperties2,
+                    legendProperties2,
+                    1200,
+                    900 );
+
             // Create and store chart files
             PNGEncoder.encode(axisChart, new FileOutputStream(new File(configuration.getOutputDir(), "BreakEvenDatasets.png")));
+            PNGEncoder.encode(scatterPlotAxisChartInstances, new FileOutputStream(new File(configuration.getOutputDir(), "BreakEvenInstances.png")));
+            PNGEncoder.encode(scatterPlotAxisChartComplexity, new FileOutputStream(new File(configuration.getOutputDir(), "BreakEvenComplexity.png")));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
