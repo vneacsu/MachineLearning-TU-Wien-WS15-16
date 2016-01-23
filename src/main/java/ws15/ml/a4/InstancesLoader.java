@@ -21,6 +21,10 @@ public class InstancesLoader {
                 .collect(Collectors.toList());
     }
 
+    public static String getDatasetName(Instances instances) {
+        return instances.relationName().split("-")[0];
+    }
+
     private static Stream<Instances> loadFromPath(String path) {
         File file = new File(path);
 

@@ -6,12 +6,16 @@ import weka.experiment.ResultListener;
 import weka.experiment.ResultProducer;
 
 import java.io.File;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class KnnEvaluationsSaver implements ResultProducer, Consumer<List<KnnEvaluation>> {
+
+    private final Configuration configuration;
+
+    public KnnEvaluationsSaver(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
     @Override
     public void accept(List<KnnEvaluation> evaluations) {
@@ -20,7 +24,7 @@ public class KnnEvaluationsSaver implements ResultProducer, Consumer<List<KnnEva
 
     public void persistKnnEvaluations(List<KnnEvaluation> evaluations) {
         InstancesResultListener listener = new InstancesResultListener();
-        listener.setOutputFile(inferOutputFile());
+        listener.setOutputFile(getOutputFile());
 
         try {
             listener.preProcess(this);
@@ -36,12 +40,8 @@ public class KnnEvaluationsSaver implements ResultProducer, Consumer<List<KnnEva
         }
     }
 
-    private File inferOutputFile() {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(":", "_");
-
-        String resultsFileName = String.format("%s.arff", timestamp);
-
-        return new File(resultsFileName);
+    private File getOutputFile() {
+        return new File(configuration.getOutputDir(), "results.arff");
     }
 
     @Override

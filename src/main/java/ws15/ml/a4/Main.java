@@ -11,12 +11,10 @@ public class Main {
         try {
             Configuration configuration = Configuration.fromArgs(args);
 
-            KnnEvaluationsSaver knnEvaluationsSaver = new KnnEvaluationsSaver();
-
             KnnEvaluator knnEvaluator = new KnnEvaluator(configuration, executor);
-            knnEvaluator.registerknnEvaluationsConsumer(knnEvaluationsSaver);
 
-            knnEvaluator.registerknnEvaluationsConsumer(new KnnBreakEvenCharts());
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnEvaluationsSaver(configuration));
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnBreakEvenCharts(configuration));
 
             knnEvaluator.evaluate();
         } finally {

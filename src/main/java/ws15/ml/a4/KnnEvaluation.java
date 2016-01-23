@@ -3,6 +3,8 @@ package ws15.ml.a4;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 
+import static ws15.ml.a4.InstancesLoader.getDatasetName;
+
 public class KnnEvaluation {
     private final String optimizationStrategyId;
     private final String optimizationStrategyOptions;
@@ -24,7 +26,7 @@ public class KnnEvaluation {
 
     public Object[] getResult() {
         return new Object[]{
-                instances.relationName().split("-")[0],
+                getDatasetName(instances),
                 new Double(instances.numInstances()),
                 new Double(instances.numAttributes()),
                 new Double(instances.numClasses()),

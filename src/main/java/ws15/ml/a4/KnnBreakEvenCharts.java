@@ -16,22 +16,24 @@ import weka.experiment.ResultProducer;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.io.FileOutputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.krysalis.jcharts.properties.PointChartProperties.SHAPE_SQUARE;
-import static org.krysalis.jcharts.properties.PointChartProperties.SHAPE_TRIANGLE;
-import static org.krysalis.jcharts.properties.PointChartProperties.SHAPE_CIRCLE;
-import static org.krysalis.jcharts.properties.PointChartProperties.SHAPE_DIAMOND;
+import static org.krysalis.jcharts.properties.PointChartProperties.*;
 
 public class KnnBreakEvenCharts implements ResultProducer, Consumer<List<KnnEvaluation>> {
 
     public static final Shape[] STANDARD_SHAPES = new Shape[]{SHAPE_SQUARE, SHAPE_TRIANGLE, SHAPE_CIRCLE, SHAPE_DIAMOND};
+
+    private final Configuration configuration;
+
+    public KnnBreakEvenCharts(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
     @Override
     public void accept(List<KnnEvaluation> evaluations) {
@@ -193,10 +195,9 @@ public class KnnBreakEvenCharts implements ResultProducer, Consumer<List<KnnEval
                     900 );
 
             // Create and store chart files
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(":", "_");
-            PNGEncoder.encode(axisChart, new FileOutputStream(String.format("charts/%s_BreakEvenDatasets.png", timestamp)));
-            PNGEncoder.encode(scatterPlotAxisChartInstances, new FileOutputStream(String.format("charts/%s_BreakEvenInstances.png", timestamp)));
-            PNGEncoder.encode(scatterPlotAxisChartComplexity, new FileOutputStream(String.format("charts/%s_BreakEvenComplexity.png", timestamp)));
+            PNGEncoder.encode(axisChart, new FileOutputStream(new File(configuration.getOutputDir(), "BreakEvenDatasets.png")));
+            PNGEncoder.encode(scatterPlotAxisChartInstances, new FileOutputStream(new File(configuration.getOutputDir(), "BreakEvenInstances.png.png")));
+            PNGEncoder.encode(scatterPlotAxisChartComplexity, new FileOutputStream(new File(configuration.getOutputDir(), "BreakEvenComplexity.png")));
 
         } catch (Exception e) {
             throw new RuntimeException(e);

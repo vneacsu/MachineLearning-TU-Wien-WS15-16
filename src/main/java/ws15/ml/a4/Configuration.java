@@ -5,10 +5,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import java.io.Closeable;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,14 +28,31 @@ public class Configuration {
                 "Configuration file for knn parameters  (otherwise using defaults)");
     }
 
+    private final File outputDir;
     private final List<String> dataSetPaths;
     private final int k;
     private final Map<String, String> strategyOptions;
 
     private Configuration(List<String> dataSetPaths, int k, Map<String, String> strategyOptions) {
+        this.outputDir = createOutputDir();
         this.dataSetPaths = dataSetPaths;
         this.k = k;
         this.strategyOptions = strategyOptions;
+    }
+
+    private File createOutputDir() {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(":", "_");
+
+        File dir = new File(timestamp);
+        if (!dir.mkdir()) {
+            throw new RuntimeException("Cannot create output directory " + dir.toString());
+        }
+
+        return dir;
+    }
+
+    public File getOutputDir() {
+        return outputDir;
     }
 
     public List<String> getDataSetPaths() {

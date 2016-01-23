@@ -1,5 +1,7 @@
 package ws15.ml.a4;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import weka.classifiers.Evaluation;
 import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
@@ -9,8 +11,11 @@ import java.util.concurrent.Callable;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static ws15.ml.a4.InstancesLoader.getDatasetName;
 
 public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
+
+    private static final Logger log = LoggerFactory.getLogger(KnnEvaluationRunner.class);
 
     private static final int NUM_FOLDS = 5; // number of folds for cross-validation
 
@@ -66,6 +71,7 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
 
     @Override
     public KnnEvaluation call() {
+        log.info("Starting kNN evaluation for data set {} with strategy {}", getDatasetName(instances), optimizationStrategyId);
 
         // Find out build time for set of instances without one fold (e.g. 80% of instances for 5-fold cross-validation)
         // TODO: Review calculation
@@ -91,6 +97,8 @@ public class KnnEvaluationRunner implements Callable<KnnEvaluation> {
         // Calculate approximate classification time for set of all instances
         // TODO: Review calculation
         long classificationDurationMs = Math.max(modelEvaluationDurationMs - (NUM_FOLDS * buildWithoutOneFoldDurationMs), 0); // make sure duration is not negative
+
+        log.info("Finished kNN evaluation for data set {} with strategy {}", getDatasetName(instances), optimizationStrategyId);
 
         return new KnnEvaluation(this.optimizationStrategyId, getOptimizationStrategyOptions(), this.instances,
                 buildClassifierDurationMs, classificationDurationMs, evaluation);
