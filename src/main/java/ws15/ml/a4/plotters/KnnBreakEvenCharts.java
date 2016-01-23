@@ -1,4 +1,4 @@
-package ws15.ml.a4;
+package ws15.ml.a4.plotters;
 
 import org.krysalis.jcharts.axisChart.AxisChart;
 import org.krysalis.jcharts.axisChart.ScatterPlotAxisChart;
@@ -10,6 +10,8 @@ import org.krysalis.jcharts.encoders.PNGEncoder;
 import org.krysalis.jcharts.properties.*;
 import org.krysalis.jcharts.test.TestDataGenerator;
 import org.krysalis.jcharts.types.ChartType;
+import ws15.ml.a4.Configuration;
+import ws15.ml.a4.KnnEvaluation;
 
 import java.awt.*;
 import java.awt.geom.Point2D;

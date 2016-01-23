@@ -1,5 +1,9 @@
 package ws15.ml.a4;
 
+import ws15.ml.a4.plotters.KnnAggregatedMisclassificationTrendsPlotter;
+import ws15.ml.a4.plotters.KnnBreakEvenCharts;
+import ws15.ml.a4.plotters.KnnDetailedMisclassificationTrendsPlotter;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,7 +19,8 @@ public class Main {
 
             knnEvaluator.registerknnEvaluationsConsumer(new KnnEvaluationsSaver(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnBreakEvenCharts(configuration));
-            knnEvaluator.registerknnEvaluationsConsumer(new KnnMisclassificationTrendsPlotter(configuration));
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnDetailedMisclassificationTrendsPlotter(configuration));
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnAggregatedMisclassificationTrendsPlotter(configuration));
 
             knnEvaluator.evaluate();
         } finally {
