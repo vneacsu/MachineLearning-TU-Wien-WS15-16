@@ -49,6 +49,9 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
             String yAxisTitle = "Build + classification time in ms";
             String title = "Total time per strategy and dataset";
 
+            // Abort if no evaluations
+            if (evaluations.size() == 0) return;
+
             // Retrieve number of strategies and datasets
             int i = 0;
             String prev = "";
@@ -62,6 +65,9 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
             }
             int numStrategies = i;
             int numDatasets = evaluations.size() / numStrategies;
+
+            // Abort if less than 2 datasets
+            if (numDatasets < 2) return;
 
             // Set size of arrays
             String[] legendLabels = new String[numStrategies];
