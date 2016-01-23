@@ -19,6 +19,8 @@ import java.awt.geom.Point2D;
 import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -108,6 +110,7 @@ public class KnnBreakEvenCharts implements ResultProducer, Consumer<List<KnnEval
 //            Stroke[] strokes = new Stroke[]{DEFAULT_STROKE, DEFAULT_STROKE, DEFAULT_STROKE};
 //            Shape[] shapes = new Shape[]{new Rectangle(15, 15), new Rectangle(8, 8), new Rectangle(7, 7)};
 
+            // Prepare line chart for times by dataset
             DataSeries dataSeries = new DataSeries(
                     xAxisLabels,
                     xAxisTitle,
@@ -134,37 +137,66 @@ public class KnnBreakEvenCharts implements ResultProducer, Consumer<List<KnnEval
                     1200,
                     900);
 
+            // Prepare scatter plots for time by numInstances and complexity measure
             ScatterPlotProperties scatterPlotProperties = new ScatterPlotProperties(strokes, shapes);
-            ScatterPlotDataSet scatterPlotDataSet = new ScatterPlotDataSet(scatterPlotProperties);
+            ScatterPlotDataSet scatterPlotDataSetInstances = new ScatterPlotDataSet(scatterPlotProperties);
+            ScatterPlotDataSet scatterPlotDataSetComplexity = new ScatterPlotDataSet(scatterPlotProperties);
 
             for( int strategyPos = 0; strategyPos < numStrategies; strategyPos++ ) {
-                Point2D.Double[] points = new Point2D.Double[numDatasets];
+                ArrayList<Point2D.Double> pointsInstances = new ArrayList<>(numDatasets);
+                ArrayList<Point2D.Double> pointsComplexity = new ArrayList<>(numDatasets);
                 for( int datasetPos = 0; datasetPos < numDatasets; datasetPos++ ) {
-                    points[datasetPos] = new Point2D.Double(numInstances[datasetPos], data[strategyPos][datasetPos]);
+                    pointsInstances.add(new Point2D.Double(numInstances[datasetPos], data[strategyPos][datasetPos]));
+                    // TODO: improve complexity calculation
+                    pointsComplexity.add(new Point2D.Double(
+                            numInstances[datasetPos] * Math.sqrt(numAttributes[datasetPos]),
+                            data[strategyPos][datasetPos]));
                 }
-                scatterPlotDataSet.addDataPoints(points, paints[strategyPos], legendLabels[strategyPos] );
+
+                // Sort by x value
+                pointsInstances.sort(Comparator.comparingDouble(Point2D.Double::getX));
+                pointsComplexity.sort(Comparator.comparingDouble(Point2D.Double::getX));
+
+                scatterPlotDataSetInstances.addDataPoints(pointsInstances.toArray(new Point2D.Double[numDatasets]), paints[strategyPos], legendLabels[strategyPos] );
+                scatterPlotDataSetComplexity.addDataPoints(pointsComplexity.toArray(new Point2D.Double[numDatasets]), paints[strategyPos], legendLabels[strategyPos] );
             }
 
-            ScatterPlotDataSeries scatterPlotDataSeries = new ScatterPlotDataSeries(
-                    scatterPlotDataSet,
+            ScatterPlotDataSeries scatterPlotDataSeriesInstances = new ScatterPlotDataSeries(
+                    scatterPlotDataSetInstances,
                     "Number of instances",
                     yAxisTitle,
                     "Total time per strategy and number of instances");
 
+            ScatterPlotDataSeries scatterPlotDataSeriesComplexity = new ScatterPlotDataSeries(
+                    scatterPlotDataSetComplexity,
+                    "Complexity",
+                    yAxisTitle,
+                    "Total time per strategy and complexity");
+
             ChartProperties chartProperties2 = new ChartProperties();
             AxisProperties axisProperties2 = new AxisProperties(new DataAxisProperties(), new DataAxisProperties());
             LegendProperties legendProperties2 = new LegendProperties();
-            ScatterPlotAxisChart scatterPlotAxisChart = new ScatterPlotAxisChart(
-                    scatterPlotDataSeries,
+            ScatterPlotAxisChart scatterPlotAxisChartInstances = new ScatterPlotAxisChart(
+                    scatterPlotDataSeriesInstances,
                     chartProperties2,
                     axisProperties2,
                     legendProperties2,
                     1200,
                     900 );
 
+            ScatterPlotAxisChart scatterPlotAxisChartComplexity = new ScatterPlotAxisChart(
+                    scatterPlotDataSeriesComplexity,
+                    chartProperties2,
+                    axisProperties2,
+                    legendProperties2,
+                    1200,
+                    900 );
+
+            // Create and store chart files
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(":", "_");
             PNGEncoder.encode(axisChart, new FileOutputStream(String.format("charts/%s_BreakEvenDatasets.png", timestamp)));
-            PNGEncoder.encode(scatterPlotAxisChart, new FileOutputStream(String.format("charts/%s_BreakEvenInstances.png", timestamp)));
+            PNGEncoder.encode(scatterPlotAxisChartInstances, new FileOutputStream(String.format("charts/%s_BreakEvenInstances.png", timestamp)));
+            PNGEncoder.encode(scatterPlotAxisChartComplexity, new FileOutputStream(String.format("charts/%s_BreakEvenComplexity.png", timestamp)));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
