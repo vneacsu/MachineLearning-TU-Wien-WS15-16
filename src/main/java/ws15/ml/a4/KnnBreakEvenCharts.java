@@ -10,9 +10,6 @@ import org.krysalis.jcharts.encoders.PNGEncoder;
 import org.krysalis.jcharts.properties.*;
 import org.krysalis.jcharts.test.TestDataGenerator;
 import org.krysalis.jcharts.types.ChartType;
-import weka.core.Instances;
-import weka.experiment.ResultListener;
-import weka.experiment.ResultProducer;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -25,7 +22,7 @@ import java.util.function.Consumer;
 
 import static org.krysalis.jcharts.properties.PointChartProperties.*;
 
-public class KnnBreakEvenCharts implements ResultProducer, Consumer<List<KnnEvaluation>> {
+public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
 
     public static final Shape[] STANDARD_SHAPES = new Shape[]{SHAPE_SQUARE, SHAPE_TRIANGLE, SHAPE_CIRCLE, SHAPE_DIAMOND};
 
@@ -203,61 +200,5 @@ public class KnnBreakEvenCharts implements ResultProducer, Consumer<List<KnnEval
             throw new RuntimeException(e);
         }
 
-    }
-
-    @Override
-    public String[] getResultNames() throws Exception {
-        return KnnEvaluation.getResultNames();
-    }
-
-
-    @Override
-    public Object[] getResultTypes() throws Exception {
-        return KnnEvaluation.getResultTypes();
-    }
-
-    //Following methods are here just to satisfy the interface and are ignored.
-
-    @Override
-    public void setInstances(Instances instances) {
-    }
-
-    @Override
-    public void setResultListener(ResultListener listener) {
-    }
-
-    @Override
-    public void setAdditionalMeasures(String[] additionalMeasures) {
-    }
-
-    @Override
-    public void preProcess() throws Exception {
-    }
-
-    @Override
-    public void postProcess() throws Exception {
-    }
-
-    @Override
-    public void doRun(int run) throws Exception {
-    }
-
-    @Override
-    public void doRunKeys(int run) throws Exception {
-    }
-
-    @Override
-    public String[] getKeyNames() throws Exception {
-        return new String[0];
-    }
-
-    @Override
-    public Object[] getKeyTypes() throws Exception {
-        return new Object[0];
-    }
-
-    @Override
-    public String getCompatibilityState() {
-        return null;
     }
 }
