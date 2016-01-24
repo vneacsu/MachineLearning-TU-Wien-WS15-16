@@ -17,6 +17,7 @@ public class Main {
 
             knnEvaluator.registerknnEvaluationsConsumer(new KnnEvaluationsSaver(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnBreakEvenCharts(configuration));
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnScoresPerDatasetPlotter(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnDetailedMisclassificationTrendsPlotter(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnAggregatedMisclassificationTrendsPlotter(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnTotalBuildAndClassifyTimeByNumInstancesPlotter(configuration));

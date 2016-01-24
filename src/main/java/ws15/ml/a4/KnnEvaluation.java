@@ -52,6 +52,8 @@ public class KnnEvaluation {
         return evaluation.confusionMatrix();
     }
 
+    public double getAccuracy() { return evaluation.pctCorrect(); }
+
     public long getBuildTimeMs() {
         return buildTimeMs;
     }
