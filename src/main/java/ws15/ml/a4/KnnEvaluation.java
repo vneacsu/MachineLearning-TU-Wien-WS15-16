@@ -2,7 +2,8 @@ package ws15.ml.a4;
 
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ public class KnnEvaluation {
     private final String optimizationStrategyId;
     private final String optimizationStrategyOptions;
     private final Instances instances;
+    private static final Logger log = LoggerFactory.getLogger(KnnEvaluation.class);
 
     private final long buildTimeMs;
     private final long classificationTimeMs;
@@ -53,6 +55,16 @@ public class KnnEvaluation {
     }
 
     public double getAccuracy() { return evaluation.pctCorrect(); }
+
+    public double getMacroAccuracy() {
+
+        double macroA = 0;
+        int Nclasses = instances.numClasses();
+        for (int i = 0; i < Nclasses; ++i) {
+           macroA=macroA + evaluation.recall(i);
+        }
+        return macroA/Nclasses*100;
+    }
 
     public long getBuildTimeMs() {
         return buildTimeMs;
