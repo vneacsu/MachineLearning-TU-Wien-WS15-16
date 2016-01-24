@@ -37,13 +37,16 @@ public class KnnEvaluator {
     }
 
     private List<KnnEvaluation> evaluateAllInstances(List<Instances> instances) {
-        return instances.stream()
+        List<Future<KnnEvaluation>> evaluations = instances.stream()
                 .flatMap(this::evaluateAllStrategiesOn)
+                .collect(Collectors.toList());
+
+        return evaluations.stream()
                 .map(this::waitEvaluationResult)
                 .collect(Collectors.toList());
     }
 
-    private Stream<Future<KnnEvaluation>> evaluateAllStrategiesOn(Instances instances) {
+    private Stream<? extends Future<KnnEvaluation>> evaluateAllStrategiesOn(Instances instances) {
         return configuration.getStrategyOptions().keySet().stream()
                 .map(it -> evaluateStrategy(it, instances));
     }
