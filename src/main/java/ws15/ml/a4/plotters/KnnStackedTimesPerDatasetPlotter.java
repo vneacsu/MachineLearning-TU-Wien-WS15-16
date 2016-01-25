@@ -57,7 +57,14 @@ public class KnnStackedTimesPerDatasetPlotter implements Consumer<List<KnnEvalua
         String[] xAxisLabels = new String[numStrategies];
 
         int i = 0;
+        String subtitle = "";
         for (KnnEvaluation evaluation : evaluations) {
+
+            if (i == 0) {
+                subtitle = "( Instances: " + Math.round((Double) evaluation.getResult()[1]) +
+                        " / Attributes: " + Math.round((Double) evaluation.getResult()[2]) +
+                        " / Classes: " + Math.round((Double) evaluation.getResult()[3]) + " )";
+            }
 
             xAxisLabels[i] = evaluation.getOptimizationStrategyId();
             data[0][i] = evaluation.getBuildTimeMs();
@@ -67,8 +74,9 @@ public class KnnStackedTimesPerDatasetPlotter implements Consumer<List<KnnEvalua
         }
 
         String xAxisTitle = "Search Strategy";
-        String yAxisTitle = "Build and classification times (in milliseconds)";
-        String title = datasetName + " - Build and classification times per strategy";
+        String yAxisTitle = "Build and classification times in ms";
+        String title = "Build and classification times per strategy for dataset " + datasetName;
+        title = title + "   " + subtitle;
         DataSeries dataSeries = new DataSeries(xAxisLabels, xAxisTitle, yAxisTitle, title);
 
         String[] legendLabels = {"Build time", "Classification time"};
