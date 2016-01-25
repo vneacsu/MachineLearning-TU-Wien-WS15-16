@@ -32,11 +32,14 @@ public class KnnDetailedMisclassificationTrendsPlotter implements Consumer<List<
     }
 
     private void plotMisclassificationsTrend(String datasetName, List<KnnEvaluation> evaluations) {
+        Instances instances = evaluations.get(0).getInstances();
+
         Chart chart = new ChartBuilder()
                 .chartType(StyleManager.ChartType.Bar)
                 .width(CHART_WIDTH)
                 .height(CHART_HEIGHT)
-                .title("Detailed Misclassification Trend Chart")
+                .title(String.format("Detailed Misclassification Trend Chart for data set %s(#i=%d, #a=%d, #c=%d)",
+                        datasetName, instances.numInstances(), instances.numAttributes(), instances.numClasses()))
                 .xAxisTitle("Classification")
                 .yAxisTitle("#instances")
                 .theme(StyleManager.ChartTheme.XChart)

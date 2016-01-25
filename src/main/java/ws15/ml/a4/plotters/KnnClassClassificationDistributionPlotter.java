@@ -12,16 +12,15 @@ import weka.core.Instances;
 import ws15.ml.a4.Configuration;
 import ws15.ml.a4.KnnEvaluation;
 
-
 import java.awt.*;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static ws15.ml.a4.plotters.ChartUtils.CHART_HEIGHT;
 import static ws15.ml.a4.plotters.ChartUtils.CHART_WIDTH;
@@ -54,54 +53,19 @@ public class KnnClassClassificationDistributionPlotter implements Consumer<List<
     }
 
     private void plotScoresPerDataset(String datasetName, List<KnnEvaluation> evaluations) throws ChartDataException, IOException, PropertyException {
+        Instances instances = evaluations.get(0).getInstances();
 
-        String[] xAxisLabels = {"Actual Distribution", "<base-line> strategy (linear search)", "strategy.kdtree", "strategy.covertree", "strategy.balltree"};
+
+        String[] xAxisLabels = getXAxisLabels(evaluations);
         String xAxisTitle = "Search Strategy";
         String yAxisTitle = "Distribution of Classes";
-        String title = "Class Classification Distribution";
+        String title = String.format("Class Classification Distribution for data set %s(#i=%d, #a=%d, #c=%d)",
+                datasetName, instances.numInstances(), instances.numAttributes(), instances.numClasses());
         DataSeries dataSeries = new DataSeries(xAxisLabels, xAxisTitle, yAxisTitle, title);
-        KnnEvaluation Eval_1 = evaluations.get(0);
-        int Nclasses = Eval_1.getInstances().numClasses();
-        String[] legendLabels = new String[Nclasses];
-        double[][] data = new double[Nclasses][5];
+        String[] legendLabels = getLegendLabels(instances);
+        double[][] data = getChartData(evaluations);
 
-        double [][] confusionM = Eval_1.getConfusionMatrix();
-        for (int cla=0; cla < confusionM.length; ++cla){
-            int acum = 0;
-            legendLabels [cla]=(String) Eval_1.getInstances().classAttribute().value(cla);
-            for (int col = 0; col < confusionM[0].length; ++col) {
-                acum += confusionM[cla][col];
-            }
-            data[cla][0]=acum;
-        }
-
-        for (int i=0; i<4; ++i){
-            KnnEvaluation Eval = evaluations.get(i);
-            for (int j=0; j<Nclasses; ++j) {
-                int k=0;
-                if (Eval.getOptimizationStrategyId().equals("<base-line> strategy (linear search)")) {
-                    k=1;
-                }else if (Eval.getOptimizationStrategyId().equals("strategy.kdtree")) {
-                    k=2;
-                }else if (Eval.getOptimizationStrategyId().equals("strategy.covertree")) {
-                    k=3;
-                }else if (Eval.getOptimizationStrategyId().equals("strategy.balltree")) {
-                    k=4;
-                }
-             confusionM = Eval.getConfusionMatrix();
-             for (int cla=0; cla < confusionM[0].length; ++cla){
-                 int acum = 0;
-                 for (int row = 0; row < confusionM.length; ++row) {
-                     acum += confusionM[row][cla];
-                 }
-                 data[cla][k]=acum;
-             }
-
-            }
-
-        }
-
-        Paint[] paints = TestDataGenerator.getRandomPaints(Nclasses);
+        Paint[] paints = TestDataGenerator.getRandomPaints(instances.numClasses());
         StackedBarChartProperties stackedBarChartProperties = new StackedBarChartProperties();
         AxisChartDataSet axisChartDataSet = new AxisChartDataSet(
                 data,
@@ -127,5 +91,41 @@ public class KnnClassClassificationDistributionPlotter implements Consumer<List<
 
     }
 
+    private String[] getXAxisLabels(List<KnnEvaluation> evaluations) {
+        List<String> xAxisLabels = evaluations.stream()
+                .map(KnnEvaluation::getOptimizationStrategyId)
+                .collect(Collectors.toList());
+
+        return xAxisLabels.toArray(new String[xAxisLabels.size()]);
+    }
+
+    private String[] getLegendLabels(Instances instances) {
+        List<String> legendLabels = new ArrayList<>();
+
+        for (int i = 0; i < instances.numClasses(); ++i) {
+            legendLabels.add(instances.classAttribute().value(i));
+        }
+
+        return legendLabels.toArray(new String[legendLabels.size()]);
+    }
+
+    private double[][] getChartData(List<KnnEvaluation> evaluations) {
+        double[][] chartData = new double[evaluations.get(0).getInstances().numClasses()][evaluations.size()];
+
+        for (int i = 0; i < chartData.length; ++i) {
+            for (int j = 0; j < chartData[0].length; ++j) {
+
+                double[] currentClassPredictions = evaluations.get(j).getConfusionMatrix()[i];
+
+                chartData[i][j] = 0;
+
+                for (double currentClassPrediction : currentClassPredictions) {
+                    chartData[i][j] += currentClassPrediction;
+                }
+            }
+        }
+
+        return chartData;
+    }
 }
 

@@ -7,7 +7,6 @@ import weka.core.Instances;
 import ws15.ml.a4.Configuration;
 import ws15.ml.a4.KnnEvaluation;
 
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,11 +35,14 @@ public class KnnScoresPerDatasetPlotter implements Consumer<List<KnnEvaluation>>
     }
 
     private void plotScoresPerDataset(String datasetName, List<KnnEvaluation> evaluations) {
+        Instances instances = evaluations.get(0).getInstances();
+
         Chart chart = new ChartBuilder()
                 .chartType(StyleManager.ChartType.Bar)
                 .width(CHART_WIDTH)
                 .height(CHART_HEIGHT)
-                .title("Accuracy Scores per Strategy")
+                .title(String.format("Accuracy Scores per Strategy for data set %s(#i=%d, #a=%d, #c=%d)",
+                        datasetName, instances.numInstances(), instances.numAttributes(), instances.numClasses()))
                 .xAxisTitle("Score")
                 .yAxisTitle("% Success")
                 .theme(StyleManager.ChartTheme.XChart)
