@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static ws15.ml.a4.plotters.ChartUtils.CHART_HEIGHT;
+import static ws15.ml.a4.plotters.ChartUtils.CHART_WIDTH;
 
 public class KnnClassClassificationDistributionPlotter implements Consumer<List<KnnEvaluation>> {
 
@@ -116,8 +118,8 @@ public class KnnClassClassificationDistributionPlotter implements Consumer<List<
                 chartProperties,
                 axisProperties,
                 legendProperties,
-                1980,
-                1020);
+                CHART_WIDTH,
+                CHART_HEIGHT);
 
         String fileName = String.format("%s_Class-Classification-Distribution-chart.png", datasetName);
         PNGEncoder.encode(axisChart, new FileOutputStream(new File(configuration.getOutputDir(), fileName)));

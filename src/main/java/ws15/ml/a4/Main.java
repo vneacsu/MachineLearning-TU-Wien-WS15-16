@@ -24,6 +24,7 @@ public class Main {
             knnEvaluator.registerknnEvaluationsConsumer(new KnnTotalBuildAndClassifyTimeByNumInstancesPlotter(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnTotalBuildAndClassifyTimeByComplexityPlotter(configuration));
             knnEvaluator.registerknnEvaluationsConsumer(new KnnTotalBuildAndClassifyTimeByNumAttributesPlotter(configuration));
+            knnEvaluator.registerknnEvaluationsConsumer(new KnnStackedTimesPerDatasetPlotter(configuration));
 
             knnEvaluator.evaluate();
         } finally {

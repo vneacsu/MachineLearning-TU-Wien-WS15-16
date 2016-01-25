@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static org.krysalis.jcharts.properties.PointChartProperties.*;
+import static ws15.ml.a4.plotters.ChartUtils.CHART_HEIGHT;
+import static ws15.ml.a4.plotters.ChartUtils.CHART_WIDTH;
 
 public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
 
@@ -131,8 +133,8 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
                     chartProperties,
                     axisProperties,
                     legendProperties,
-                    1200,
-                    900);
+                    CHART_WIDTH,
+                    CHART_HEIGHT);
 
             // Prepare scatter plots for time by numInstances and complexity measure
             ScatterPlotProperties scatterPlotProperties = new ScatterPlotProperties(strokes, shapes);
@@ -178,16 +180,16 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
                     chartProperties2,
                     axisProperties2,
                     legendProperties2,
-                    1200,
-                    900 );
+                    CHART_WIDTH,
+                    CHART_HEIGHT );
 
             ScatterPlotAxisChart scatterPlotAxisChartComplexity = new ScatterPlotAxisChart(
                     scatterPlotDataSeriesComplexity,
                     chartProperties2,
                     axisProperties2,
                     legendProperties2,
-                    1200,
-                    900 );
+                    CHART_WIDTH,
+                    CHART_HEIGHT );
 
             // Create and store chart files
             PNGEncoder.encode(axisChart, new FileOutputStream(new File(configuration.getOutputDir(), "BreakEvenDatasets.png")));

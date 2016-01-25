@@ -7,8 +7,8 @@ import java.io.IOException;
 
 public class ChartUtils {
 
-    public static final int CHART_WIDTH = 1980;
-    public static final int CHART_HEIGHT = 1020;
+    public static final int CHART_WIDTH = 1200;
+    public static final int CHART_HEIGHT = 900;
 
     public static void plotChart(Chart chart, String fileName) {
         try {
