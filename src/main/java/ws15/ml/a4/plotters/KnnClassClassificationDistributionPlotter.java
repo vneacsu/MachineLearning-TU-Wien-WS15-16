@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -92,11 +93,14 @@ public class KnnClassClassificationDistributionPlotter implements Consumer<List<
     }
 
     private String[] getXAxisLabels(List<KnnEvaluation> evaluations) {
-        List<String> xAxisLabels = evaluations.stream()
+
+        List<String> xAxisLabels1 = new ArrayList<String>(Arrays.asList("Actual Distribution"));
+        List<String> xAxisLabels2 = evaluations.stream()
                 .map(KnnEvaluation::getOptimizationStrategyId)
                 .collect(Collectors.toList());
+        xAxisLabels1.addAll(xAxisLabels2);
 
-        return xAxisLabels.toArray(new String[xAxisLabels.size()]);
+        return xAxisLabels1.toArray(new String[xAxisLabels1.size()]);
     }
 
     private String[] getLegendLabels(Instances instances) {
@@ -110,18 +114,27 @@ public class KnnClassClassificationDistributionPlotter implements Consumer<List<
     }
 
     private double[][] getChartData(List<KnnEvaluation> evaluations) {
-        double[][] chartData = new double[evaluations.get(0).getInstances().numClasses()][evaluations.size()];
+        double[][] chartData = new double[evaluations.get(0).getInstances().numClasses()][evaluations.size()+1];
 
-        for (int i = 0; i < chartData.length; ++i) {
-            for (int j = 0; j < chartData[0].length; ++j) {
+        double [][] confusionM = evaluations.get(0).getConfusionMatrix();
+        for (int cla=0; cla < confusionM.length; ++cla){
+            int acum = 0;
+            for (int col = 0; col < confusionM[0].length; ++col) {
+                acum += confusionM[cla][col];
+            }
+            chartData[cla][0]=acum;
+        }
 
-                double[] currentClassPredictions = evaluations.get(j).getConfusionMatrix()[i];
 
-                chartData[i][j] = 0;
-
-                for (double currentClassPrediction : currentClassPredictions) {
-                    chartData[i][j] += currentClassPrediction;
+        for (int i=0; i<(chartData[0].length-1); ++i){
+            KnnEvaluation Eval = evaluations.get(i);
+            confusionM = Eval.getConfusionMatrix();
+            for (int cla=0; cla < confusionM[0].length; ++cla){
+                int acum = 0;
+                for (int row = 0; row < confusionM.length; ++row) {
+                    acum += confusionM[row][cla];
                 }
+                chartData[cla][i+1]=acum;
             }
         }
 
