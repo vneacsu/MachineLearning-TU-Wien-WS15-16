@@ -18,7 +18,9 @@ dependencies {
     compile 'nz.ac.waikato.cms.weka:weka-stable:3.6.13'
     compile 'net.sf.jcharts:krysalis-jCharts:1.0.0-alpha-1'
 
-    compile 'com.xeiam.xchart:xchart:2.5.1'
+    compile('com.xeiam.xchart:xchart:2.5.1') {
+        exclude group: "de.erichseifert.vectorgraphics2d", module: "VectorGraphics2D"
+    }
 
     def slf4jVersion = '1.7.13'
     compile "org.slf4j:slf4j-api:$slf4jVersion"
