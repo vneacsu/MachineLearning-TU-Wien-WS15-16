@@ -1,3 +1,8 @@
+# Requirements
+
+* Java 8
+
+
 # Build
 
 In order to build the executable for the kNN evaluation framework, run the following command:
@@ -17,6 +22,7 @@ build/install/knn-evaluator/
 ```
 
 Everything one needs to run evaluations is found under the above mentioned folder.
+
 
 # Run
 
