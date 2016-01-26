@@ -148,7 +148,7 @@ public class KnnBreakEvenCharts implements Consumer<List<KnnEvaluation>> {
                     pointsInstances.add(new Point2D.Double(numInstances[datasetPos], data[strategyPos][datasetPos]));
                     // TODO: improve complexity calculation
                     pointsComplexity.add(new Point2D.Double(
-                            numInstances[datasetPos] * Math.sqrt(numAttributes[datasetPos]),
+                            numInstances[datasetPos] * Math.log(numAttributes[datasetPos] + 1),
                             data[strategyPos][datasetPos]));
                 }
 
